@@ -1,0 +1,29 @@
+{
+  "name": "@zixcel/webauthn",
+  "version": "0.10.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "description": "Browser WebAuthn options and binary evidence for an explicit authenticator profile",
+  "files": [
+    "src",
+    "docs",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+    "!**/*.tgz"
+  ],
+  "exports": {
+    ".": "./src/index.mjs",
+    "./browser": "./src/browser.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "test:browser": "playwright test"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1"
+  }
+}
