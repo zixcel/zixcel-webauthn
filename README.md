@@ -1,27 +1,29 @@
-# Zixcel WebAuthn
+# @zixcel/webauthn
 
-Version 0.10.0. Framework-independent browser ceremonies, option builders and
-authenticator flag decoding. Callers explicitly provide RP/user display names, user handle,
-challenge, expiry and credential identifier. Callers own identity and account integration.
+Build WebAuthn ceremony options and interpret browser evidence for a caller-owned identity flow.
 
-The current profile is local, device-bound, resident and user-verifying. It
-requires localhost and an internal authenticator; it is not a generic remote
-RP or synced-key policy. Flags are evidence only: server-side signature, origin,
-challenge and credential checks remain the relying party's responsibility.
+## What you can do
 
-Run `npm test` to check option bindings, expiration and authenticator evidence.
-Run `npm run test:browser` for an isolated Playwright virtual-authenticator
-ceremony with independently verified signatures; this is not a physical-device test.
-The `@zixcel/webauthn/browser` export provides `createPasskey` and `provePasskey`.
-See [browser ceremony integration](docs/browser-ceremony.md) for the explicit
-Crowsi boundary and validation responsibilities.
-Use `passkeyCreationOptions` with `navigator.credentials.create`, then
-`passkeyProofOptions` with `navigator.credentials.get`. No network or storage
-side effect occurs inside the package. Recovery logic belongs to the existing
-zixcel-owner-recovery and Crowsi packages, not these browser utilities.
+- Prepare registration and authentication options.
+- Decode and validate bounded evidence fields.
 
-## Package integration
+## Current scope
 
-The package is an independently consumable unit. Callers reference its documented
-interface through a versioned dependency and own application-specific composition
-and integration.
+The relying party supplies identities, challenges, expiry and credential records. This package does not become an identity authority.
+
+Package distribution is not activated by this documentation. Use the checked-in source and the declared dependency versions; published availability must be verified separately.
+
+## Getting started
+
+Use the package manager matching the checked-in lockfile and the Node.js version declared in `engines` in `package.json`. Run from this repository:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm test
+```
+
+## Documentation and source
+
+[Usage guide](docs/getting-started.md)
+
+[Detailed documentation](docs) · [Implementation and public interfaces](src) · [Verification cases](test) · [Contributing](CONTRIBUTING.md) · [Security reporting](SECURITY.md) · [License](LICENSE) · [Attribution notices](NOTICE)
