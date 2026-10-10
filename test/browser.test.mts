@@ -1,15 +1,16 @@
+import type { CreationChallenge, ProofChallenge, BrowserCredentials } from '../src/types/contracts.mjs'
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createPasskey, provePasskey } from '../src/browser.mjs'
+import { createPasskey, provePasskey } from '../dist/browser.mjs'
 test('serializes exact browser evidence and never accepts a different, synced or UV-less key', async () => {
   const bytes = new Uint8Array([1, 2, 3]); const auth = new Uint8Array(37); auth[32] = 5
-  const challenge = { rpId: 'localhost', rpName: 'Example', userName: 'owner', userDisplayName: 'Owner',
+  const challenge: CreationChallenge & ProofChallenge = { rpId: 'localhost', rpName: 'Example', userName: 'owner', userDisplayName: 'Owner',
     userHandle: 'AQID', credentialId: 'AQID', challenge: 'AQID', timeout: 60_000,
     expiresAtUnixMs: Date.now() + 60_000 }
   const response = { clientDataJSON: bytes, getAuthenticatorData: () => auth,
     getPublicKey: () => bytes, authenticatorData: auth, signature: bytes }
   const value = { type: 'public-key', rawId: bytes, response }
-  const credentials = { create: async options => {
+  const credentials: BrowserCredentials = { create: async options => {
     assert.equal(options.publicKey.authenticatorSelection.userVerification, 'required'); return value
   }, get: async options => {
     assert.equal(options.publicKey.userVerification, 'required'); return value
