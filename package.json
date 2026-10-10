@@ -36,5 +36,13 @@
     "@playwright/test": "1.62.1",
     "typescript": "5.9.3",
     "@types/node": "24.19.2"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zixcel/zixcel-webauthn.git"
   }
 }

@@ -28,3 +28,17 @@ test('serializes exact browser evidence and never accepts a different, synced or
   await assert.rejects(provePasskey(challenge, credentials), /device-bound-credential-required/u)
   assert.equal('privateKey' in proof, false)
 })
+
+test('malformed browser credential representations fail closed', async () => {
+  const challenge: CreationChallenge & ProofChallenge = {
+    rpId: 'localhost', rpName: 'Example', userName: 'owner', userDisplayName: 'Owner',
+    userHandle: 'AQID', credentialId: 'AQID', challenge: 'AQID', timeout: 1000,
+    expiresAtUnixMs: Date.now() + 1000,
+  }
+  for (const value of [null, { type: 'public-key', rawId: new Uint8Array(1), response: null },
+    { type: 'public-key', rawId: new Uint8Array(1), response: [] }]) {
+    const credentials: BrowserCredentials = { create: async () => value, get: async () => value }
+    await assert.rejects(createPasskey(challenge, credentials), /zixcel-webauthn-/u)
+    await assert.rejects(provePasskey(challenge, credentials), /zixcel-webauthn-/u)
+  }
+})
