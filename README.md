@@ -27,3 +27,11 @@ pnpm test
 [Usage guide](docs/getting-started.md)
 
 [Detailed documentation](docs) · [Implementation and public interfaces](src) · [Verification cases](test) · [Contributing](CONTRIBUTING.md) · [Security reporting](SECURITY.md) · [License](LICENSE) · [Attribution notices](NOTICE)
+
+## Development and typed boundaries
+
+Develop with Node.js 24. Runtime source is TypeScript in `src/`; shared challenge and evidence types live
+in `src/types/`. Run `npm ci --ignore-scripts`, `npm run typecheck`, and `npm test`.
+The build emits ESM and matching declarations to `dist/`. Package exports use
+these generated files. No credential signature or authorization is verified by
+the browser adapter; the server authority owns those checks.

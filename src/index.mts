@@ -1,6 +1,9 @@
+import type { CreationChallenge, ProofChallenge, AuthenticatorEvidence, DeviceBoundRequestOptions, DeviceBoundCreationOptions } from './types/contracts.mjs'
+export type { CreationChallenge, ProofChallenge, AuthenticatorEvidence, DeviceBoundRequestOptions, DeviceBoundCreationOptions } from './types/contracts.mjs'
+
 // Zixcel-owned WebAuthn option builders. Credential ID and signature bind both ceremonies.
 
-export function passkeyCreationOptions(value) {
+export function passkeyCreationOptions(value: CreationChallenge): DeviceBoundCreationOptions {
   return {
     challenge: decode(value.challenge), rp: { id: localRp(value.rpId), name: display(value.rpName) },
     user: { id: decode(required(value.userHandle)), name: display(value.userName),
@@ -14,7 +17,7 @@ export function passkeyCreationOptions(value) {
   }
 }
 
-export function passkeyProofOptions(value, now = Date.now()) {
+export function passkeyProofOptions(value: ProofChallenge, now = Date.now()): DeviceBoundRequestOptions {
   const remaining = value.expiresAtUnixMs - now
   if (!Number.isSafeInteger(remaining) || remaining <= 0) {
     throw Error('zixcel-webauthn-challenge-expired')
@@ -29,7 +32,7 @@ export function passkeyProofOptions(value, now = Date.now()) {
 }
 
 /** Decodes the WebAuthn authenticator flags used by the local custody policy. */
-export function passkeyAuthenticatorEvidence(value) {
+export function passkeyAuthenticatorEvidence(value: ArrayBuffer | Uint8Array): AuthenticatorEvidence {
   const bytes = value instanceof Uint8Array ? value : new Uint8Array(value)
   if (bytes.byteLength < 37) invalid()
   const flags = bytes[32]
@@ -40,24 +43,24 @@ export function passkeyAuthenticatorEvidence(value) {
     backedUp: (flags & 0x10) !== 0
   }
 }
-function localRp(value) { if (value !== 'localhost') invalid(); return value }
-function timeout(value) {
-  if (!Number.isSafeInteger(value) || value < 1 || value > 300_000) invalid()
+function localRp(value: unknown): 'localhost' { if (value !== 'localhost') invalid(); return value }
+function timeout(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 1 || value > 300_000) invalid()
   return value
 }
-function required(value) {
+function required(value: unknown): string {
   if (typeof value !== 'string' || !/^[A-Za-z0-9_-]{1,131072}$/u.test(value)) invalid()
   return value
 }
-function decode(value) {
+function decode(value: unknown): Uint8Array<ArrayBuffer> {
   const encoded = required(value)
   const binary = atob(encoded.replaceAll('-', '+').replaceAll('_', '/')
     .padEnd(Math.ceil(encoded.length / 4) * 4, '='))
   return Uint8Array.from(binary, item => item.charCodeAt(0))
 }
-function invalid() { throw Error('zixcel-webauthn-options-invalid') }
+function invalid(): never { throw Error('zixcel-webauthn-options-invalid') }
 
-function display(value) {
+function display(value: unknown): string {
   if (typeof value !== "string" || !value.trim() || value.length > 128) invalid()
   return value
 }

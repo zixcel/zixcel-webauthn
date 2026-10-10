@@ -1,11 +1,12 @@
+import type { CreationChallenge, ProofChallenge, BrowserCredentials } from '../src/types/contracts.mjs'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   passkeyAuthenticatorEvidence, passkeyCreationOptions, passkeyProofOptions
-} from '../src/index.mjs'
+} from '../dist/index.mjs'
 
-const challenge = {
-  rpName: 'Example', userName: 'owner', userDisplayName: 'Owner', challenge: 'AQID', rpId: 'localhost', origin: 'http://localhost:4213',
+const challenge: CreationChallenge & ProofChallenge = {
+  rpName: 'Example', userName: 'owner', userDisplayName: 'Owner', challenge: 'AQID', rpId: 'localhost',
   timeout: 60_000, expiresAtUnixMs: 70_000, userHandle: 'BAUG', credentialId: 'BwgJ'
 }
 

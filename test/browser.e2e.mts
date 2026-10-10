@@ -1,3 +1,4 @@
+import type { CreationChallenge } from '../src/types/contracts.mjs'
 import assert from 'node:assert/strict'
 import { createHash, createPublicKey, randomBytes, verify } from 'node:crypto'
 import { createServer } from 'node:http'
@@ -10,15 +11,15 @@ test('standalone WebAuthn creates and proves an exact device key in a real brows
     if (request.url === '/') {
       response.setHeader('Content-Type', 'text/html')
       response.end('<!doctype html><title>WebAuthn package test</title><script type="module">import * as api from "/browser.mjs"; window.api = api</script>')
-    } else if (['/browser.mjs', '/index.mjs'].includes(request.url)) {
+    } else if (['/browser.mjs', '/index.mjs'].includes(request.url ?? '')) {
       response.setHeader('Content-Type', 'text/javascript')
-      response.end(await readFile(new URL('../src' + request.url, import.meta.url)))
+      response.end(await readFile(new URL('../dist' + request.url, import.meta.url)))
     } else { response.statusCode = 404; response.end() }
   })
   server.listen(0, '127.0.0.1'); await once(server, 'listening')
   const context = await browser.newContext()
   try {
-    const page = await context.newPage(); const failures = []
+    const page = await context.newPage(); const failures: string[] = []
     page.on('pageerror', error => failures.push(error.message))
     const cdp = await context.newCDPSession(page)
     await cdp.send('WebAuthn.enable')
@@ -26,13 +27,14 @@ test('standalone WebAuthn creates and proves an exact device key in a real brows
       protocol: 'ctap2', transport: 'internal', hasResidentKey: true,
       hasUserVerification: true, isUserVerified: true, automaticPresenceSimulation: true
     } })
-    const origin = 'http://localhost:' + server.address().port
+    const address = server.address(); assert.ok(address && typeof address !== 'string')
+    const origin = 'http://localhost:' + address.port
     await page.goto(origin); await page.waitForFunction(() => Boolean(window.api))
-    const challenge = { rpId: 'localhost', rpName: 'Package test', userName: 'owner',
+    const challenge: CreationChallenge = { rpId: 'localhost', rpName: 'Package test', userName: 'owner',
       userDisplayName: 'Owner', userHandle: randomBytes(32).toString('base64url'),
       challenge: randomBytes(32).toString('base64url'), timeout: 60_000 }
     const registration = await page.evaluate(value => window.api.createPasskey(value), challenge)
-    const createdClient = JSON.parse(Buffer.from(registration.clientDataJSON, 'base64url'))
+    const createdClient = JSON.parse(Buffer.from(registration.clientDataJSON, 'base64url').toString('utf8'))
     assert.equal(createdClient.challenge, challenge.challenge)
     assert.equal(createdClient.origin, origin); assert.equal(createdClient.type, 'webauthn.create')
     const proofChallenge = { ...challenge, credentialId: registration.credentialId,
@@ -40,7 +42,7 @@ test('standalone WebAuthn creates and proves an exact device key in a real brows
     const proof = await page.evaluate(value => window.api.provePasskey(value), proofChallenge)
     assert.equal(proof.credentialId, registration.credentialId)
     const clientData = Buffer.from(proof.clientDataJSON, 'base64url')
-    const client = JSON.parse(clientData)
+    const client = JSON.parse(clientData.toString('utf8'))
     assert.equal(client.challenge, proofChallenge.challenge); assert.equal(client.origin, origin)
     assert.equal(client.type, 'webauthn.get')
     const auth = Buffer.from(proof.authenticatorData, 'base64url')
@@ -56,6 +58,6 @@ test('standalone WebAuthn creates and proves an exact device key in a real brows
     await assert.rejects(page.evaluate(value => window.api.provePasskey(value), { ...proofChallenge, timeout: 100 }))
     assert.deepEqual(failures, [])
   } finally {
-    await context.close(); server.closeAllConnections(); await new Promise(resolve => server.close(resolve))
+    await context.close(); server.closeAllConnections(); await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()))
   }
 })
