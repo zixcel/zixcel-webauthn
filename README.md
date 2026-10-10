@@ -1,6 +1,6 @@
 # @zixcel/webauthn
 
-Build WebAuthn ceremony options and interpret browser evidence for a caller-owned identity flow.
+Build device-bound WebAuthn options and browser evidence for a caller-owned localhost identity flow.
 
 ## What you can do
 
@@ -18,8 +18,9 @@ Package distribution is not activated by this documentation. Use the checked-in 
 Use the package manager matching the checked-in lockfile and the Node.js version declared in `engines` in `package.json`. Run from this repository:
 
 ```sh
-pnpm install --frozen-lockfile
-pnpm test
+npm ci --ignore-scripts
+npm run typecheck
+npm test
 ```
 
 ## Documentation and source
@@ -35,3 +36,24 @@ in `src/types/`. Run `npm ci --ignore-scripts`, `npm run typecheck`, and `npm te
 The build emits ESM and matching declarations to `dist/`. Package exports use
 these generated files. No credential signature or authorization is verified by
 the browser adapter; the server authority owns those checks.
+
+## Host integration
+
+The adapter supports the `localhost` relying party and a platform authenticator
+with user verification. The identity authority must issue the challenge and
+validate the returned signature, origin, expiry and exact credential binding.
+
+```ts
+import { createPasskey, type RegistrationEvidence } from '@zixcel/webauthn/browser'
+import type { CreationChallenge } from '@zixcel/webauthn'
+
+export async function collectRegistrationEvidence(
+  challengeIssuedByAuthority: CreationChallenge,
+): Promise<RegistrationEvidence> {
+  return createPasskey(challengeIssuedByAuthority)
+}
+```
+
+Send the evidence to the issuing authority; this browser result does not grant
+access. Private keys remain in the authenticator. Development uses a virtual
+authenticator; tests do not exercise a real account or hardware credential.
