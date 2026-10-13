@@ -1,0 +1,228 @@
+{
+  "repository": "zixcel/zixcel-webauthn",
+  "purpose": "Build WebAuthn ceremony options and interpret browser evidence for a caller-owned identity flow.",
+  "responsibility_boundary": "Own the named reusable integration/data mechanism. Product roles/UI and operational approvals stay with consumers; transport/custody reuse managed Crowsi components where capabilities fit. Planning-only APIs must remain clearly distinguished from implemented external operations.",
+  "packages": [
+    {
+      "manifest": "package.json",
+      "package": "@zixcel/webauthn",
+      "ecosystem": "npm",
+      "description": "Browser WebAuthn options and binary evidence for an explicit authenticator profile",
+      "interfaces": {
+        "exports": {
+          ".": {
+            "types": "./dist/index.d.mts",
+            "import": "./dist/index.mjs"
+          },
+          "./browser": {
+            "types": "./dist/browser.d.mts",
+            "import": "./dist/browser.mjs"
+          }
+        },
+        "bin": {},
+        "main": null,
+        "types": null
+      },
+      "declared_commands": {
+        "test": "npm run build && node --test test/*.test.mts",
+        "test:browser": "npm run build && playwright test",
+        "typecheck": "npm run build && tsc -p tsconfig.test.json",
+        "build": "node scripts/clean-dist.mts && tsc -p tsconfig.json",
+        "prepack": "npm run typecheck && npm test"
+      }
+    }
+  ],
+  "schema_definitions": [],
+  "test_sources": [
+    ".github/scripts/artifact-record.test.mts",
+    "test/browser.e2e.mts",
+    "test/browser.test.mts",
+    "test/options.test.mts",
+    "test/types/browser.mts",
+    "tsconfig.test.json"
+  ],
+  "example_sources": [],
+  "workflow_definitions": [
+    {
+      "path": ".github/workflows/node.yml",
+      "jobs": [
+        {
+          "job": "browser-package",
+          "condition": null,
+          "runs_on": "ubuntu-24.04",
+          "steps": [
+            {
+              "name": null,
+              "run": null,
+              "uses": "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": null,
+              "uses": "actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": "npm ci --ignore-scripts",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": "npm run build",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": "npm run typecheck",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": "npm test",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": "npx playwright install --with-deps chromium",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": "npm run test:browser",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": "npm pack",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": "npm audit --audit-level=low",
+              "uses": null,
+              "condition": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/oss-policy.yml",
+      "jobs": [
+        {
+          "job": "repository-policy",
+          "condition": null,
+          "runs_on": "ubuntu-latest",
+          "steps": [
+            {
+              "name": null,
+              "run": null,
+              "uses": "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+              "condition": null
+            },
+            {
+              "name": "Verify repository policy",
+              "run": "python3 .github/oss-policy-check.py",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": "Verify policy regression tests",
+              "run": "cd .github && python3 -m unittest discover -s policy-tests",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": "Check policy types",
+              "run": "python3 -m venv \"$RUNNER_TEMP/policy-types\"\n\"$RUNNER_TEMP/policy-types/bin/pip\" install -r .github/policy/requirements.txt\n\"$RUNNER_TEMP/policy-types/bin/mypy\" --strict .github/policy .github/oss-policy-check.py .github/policy-tests\n",
+              "uses": null,
+              "condition": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/prepare-npm-artifact.yml",
+      "jobs": [
+        {
+          "job": "prepare",
+          "condition": "github.ref == 'refs/heads/main' && github.event.repository.private == false",
+          "runs_on": "ubuntu-24.04",
+          "steps": [
+            {
+              "name": "Require the selected source",
+              "run": "[[ \"$EXPECTED_SHA\" =~ ^[a-f0-9]{40}$ && \"$EXPECTED_SHA\" == \"$GITHUB_SHA\" ]]\n",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": null,
+              "uses": "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": null,
+              "uses": "actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+              "condition": null
+            },
+            {
+              "name": "Isolate configuration and public registry cache",
+              "run": ": > \"$RUNNER_TEMP/empty-user.npmrc\"\n: > \"$RUNNER_TEMP/empty-global.npmrc\"\necho \"NPM_CONFIG_USERCONFIG=$RUNNER_TEMP/empty-user.npmrc\" >> \"$GITHUB_ENV\"\necho \"NPM_CONFIG_GLOBALCONFIG=$RUNNER_TEMP/empty-global.npmrc\" >> \"$GITHUB_ENV\"\necho \"NPM_CONFIG_CACHE=$RUNNER_TEMP/release-cache\" >> \"$GITHUB_ENV\"\necho \"NPM_CONFIG_REGISTRY=https://registry.npmjs.org\" >> \"$GITHUB_ENV\"\n",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": "Install pinned package tools without lifecycle hooks",
+              "run": "npm install --global --ignore-scripts --no-audit --no-fund npm@11.12.1 pnpm@10.29.3",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": "Validate isolated package and dependencies",
+              "run": "npm ci --workspaces=false --ignore-scripts\nnpm run typecheck\nnpm run test\nnpm audit --workspaces=false --audit-level=low\n",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": "Check release-tool contracts",
+              "run": "node ./node_modules/typescript/bin/tsc -p .github/tsconfig.release.json",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": "Test artifact metadata boundaries",
+              "run": "node --test .github/scripts/artifact-record.test.mts",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": "Generate the executable distribution without lifecycle hooks",
+              "run": "mkdir -p \"$GITHUB_WORKSPACE/outgoing\"\nnpm pack --workspaces=false --ignore-scripts --json --pack-destination \"$GITHUB_WORKSPACE/outgoing\" > \"$RUNNER_TEMP/pack.json\"\nnode \"$GITHUB_WORKSPACE/.github/scripts/artifact-receipt.mts\" \"$RUNNER_TEMP/pack.json\" \"$GITHUB_WORKSPACE/outgoing\"\n",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": null,
+              "uses": "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "condition": null
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "evidence_policy": "Declarations and source paths are not proof of an executed acceptance. Exact CI head and result are recorded separately. No live accounts or production acceptance is inferred."
+}
