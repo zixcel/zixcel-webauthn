@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "repository": "zixcel/zixcel-webauthn",
+  "defaultBranch": "main",
+  "requiredWorkflows": [
+    "node.yml",
+    "oss-policy.yml"
+  ],
+  "packages": [
+    {
+      "ecosystem": "npm",
+      "manifest": "package.json",
+      "name": "@zixcel/webauthn",
+      "installDirectory": "."
+    }
+  ]
+}
