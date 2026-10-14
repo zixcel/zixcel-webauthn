@@ -33,7 +33,7 @@
     "node": ">=22"
   },
   "devDependencies": {
-    "@playwright/test": "1.62.1",
+    "@playwright/test": "1.64.0",
     "typescript": "5.9.3",
     "@types/node": "24.19.2"
   },
