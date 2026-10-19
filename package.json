@@ -44,5 +44,12 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zixcel/zixcel-webauthn.git"
-  }
+  },
+  "keywords": [
+    "webauthn",
+    "passkeys",
+    "authentication",
+    "typescript",
+    "webauthn-api"
+  ]
 }
